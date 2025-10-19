@@ -19,15 +19,15 @@ function usePotrait() {
   return potrait;
 }
 
-const cleanUpHTML = (html) =>
+const cleanUpHTML = (html: string) =>
   String(html ?? "")
     .replace(/\bundefined\b\s*$/i, "")
     .replace(/<\/section>\s*undefined\s*$/i, "</section>");
 
 export function Camera() {
-  const webcamRef = useRef(null);
-  const resultRef = useRef(null);
-  const canvasRef = useRef(null);
+  const webcamRef = useRef<any>(null);
+  const resultRef = useRef<any>(null);
+  const canvasRef = useRef<any>(null);
 
   const [state, formAction] = React.useActionState(anylizeAction, {
     ok: false,
@@ -36,7 +36,7 @@ export function Camera() {
   });
 
   const ridRef = useRef("");
-  const ridInputRef = useRef(null);
+  const ridInputRef = useRef<HTMLInputElement | null>(null);
 
   const [photoDataUrl, setPhotoDataUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -111,9 +111,9 @@ export function Camera() {
     window?.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function onSubmit(e) {
+  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     if (!photoDataUrl) {
-      e.preventDefault();
+      event.preventDefault();
       setErrorMessage("Belum ada foto. Ambil foto dulu");
       return;
     }
@@ -201,6 +201,7 @@ export function Camera() {
         <div className="absolute bottom-2 left-1/2 -translate-1/2 flex items-center gap-3">
           {!photoDataUrl ? (
             <button
+              type="button"
               onClick={capturePhoto}
               className="flex items-center justify-center shadow w-14 h-14 rounded-full bg-white text-gray-900"
               title="Ambil foto">
@@ -208,6 +209,7 @@ export function Camera() {
             </button>
           ) : (
             <button
+              type="button"
               onClick={retake}
               className="flex items-center justify-center shadow w-14 h-14 rounded-full bg-white text-gray-900"
               title="Retake foto">
