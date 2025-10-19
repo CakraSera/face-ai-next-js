@@ -22,55 +22,59 @@ function usePotrait() {
 const cleanUpHTML = (html) =>
   String(html ?? "")
     .replace(/\bundefined\b\s*$/i, "")
-    .replace(/<\/section>\s*undefined\s*$/i, "</section>");
+    .replace(/<\/section>\s*undefined\s*$/i, "");
 
 export function Camera() {
-  const webcamRef = useRef(null);
-  const resultRef = useRef(null);
-  const canvasRef = useRef(null);
+  const webcamRef = useRef<any>(null);
+  const resultRef = useRef<any>(null);
+  const canvasRef = useRef<any>(null);
 
   const [state, formAction] = React.useActionState(anylizeAction, {
     ok: false,
     html: "",
     rid: "",
   });
-
   const ridRef = useRef("");
   const ridInputRef = useRef(null);
 
-  const [photoDataUrl, setPhotoDataUrl] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [typedHtml, setTypedHtml] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [responseHtml, setResponseHtml] = useState("");
+  const [photoDataUrl, setPhotoDataUrl] = useState<string>("");
+  // If varibale need logic, name using prefix is
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
-  const isPortrait = usePotrait(); // 9:16 => 16:9 (untuk rensponsive dari camera nya)
-  console.log(isPortrait);
-  const videoConstrains = useMemo(
+  const [typedHtml, setTypedHtml] = useState<string>("");
+  const [isTyping, setIsTyping] = useState<boolean>(false);
+  const [responseHtml, setResponseHtml] = useState<string>("");
+
+  const isPotrait = usePotrait();
+  console.log("🚀 ~ Camera ~ isPotrait:", isPotrait);
+  const videoContraints = useMemo(
     () => ({
       facingMode: "user",
-      width: { ideal: isPortrait ? 720 : 1280 },
-      height: { ideal: isPortrait ? 1280 : 720 },
+      width: { ideal: isPotrait ? 720 : 1280 },
+      height: { ideal: isPotrait ? 1280 : 720 },
       frameRate: { ideal: 30, max: 60 },
     }),
-    [isPortrait]
+    [isPotrait]
   );
 
   function capturePhoto() {
     setErrorMessage("");
-    const video = webcamRef.current?.video; // => data nya gaada dia akan menjadi undefined
+    const video = webcamRef.current?.video;
+    console.log("🚀 ~ capturePhoto ~ video:", video);
     const canvas = canvasRef.current;
+    console.log("🚀 ~ capturePhoto ~ canvas:", canvas);
+    console.log("video with", video.videoWith);
 
-    if (!video || !canvas || !video.videoWidth) {
-      setErrorMessage("Kamera Belum siap, coba ditunggu sebentar brow!");
+    if (!video || !canvas || !video.videoWith) {
+      setErrorMessage("Camera not ready");
     }
 
     const vw = video.videoWidth,
-      vh = video.videoHeight;
+      vh = video.videoHight;
 
-    const targetW = isPortrait ? 720 : 1280;
-    const targetH = isPortrait ? 1280 : 720;
+    const targetW = isPotrait ? 720 : 1280;
+    const targetH = isPotrait ? 1280 : 720;
 
     const srcAspect = vw / vh,
       dstAspect = targetW / targetH;
@@ -94,10 +98,10 @@ export function Camera() {
     canvas.height = targetH;
 
     const context = canvas.getContext("2d");
+
     context.drawImage(video, sx, sy, sw, sh, 0, 0, targetW, targetH);
 
     const result = canvas.toDataURL("image/jpeg", 0.9);
-    console.log(result);
     setPhotoDataUrl(result);
   }
 
@@ -108,19 +112,19 @@ export function Camera() {
     setIsTyping(false);
     setIsLoading(false);
     setErrorMessage("");
-    window?.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
-
   function onSubmit(e) {
     if (!photoDataUrl) {
       e.preventDefault();
-      setErrorMessage("Belum ada foto. Ambil foto dulu");
+      setErrorMessage("Picture dont available. Please take a picture!");
       return;
     }
 
     const rid = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     ridRef.current = rid;
+
     if (ridInputRef.current) ridInputRef.current.value = rid;
 
     setIsLoading(true);
@@ -147,12 +151,11 @@ export function Camera() {
     setResponseHtml(raw);
     resultRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
 
-    const parts = raw.split(/(?=<section)/g).filter(Boolean);
+    const parts = raw.split(/(?=<section>)/g).filter(Boolean);
 
     let i = 0;
     setTypedHtml("");
     setIsTyping(true);
-
     const step = () => {
       if (i >= parts.length) {
         setIsTyping(false);
@@ -174,16 +177,14 @@ export function Camera() {
   const htmlToRender = cleanUpHTML(
     typedHtml || (isTyping ? "" : responseHtml) || ""
   );
-
   return (
     <div>
       <div className="relative w-full rounded-2xl overflow-hidden bg-black">
         <Webcam
-          ref={webcamRef}
           audio={false}
-          videoConstraints={videoConstrains}
+          videoConstraints={videoContraints}
           className={`w-full ${
-            isPortrait ? "aspect-[9/16]" : "aspect-video"
+            isPotrait ? "aspect-[9/16]" : "aspect-video"
           } object-cover`}
           mirrored
           screenshotFormat="image/jpeg"
@@ -198,19 +199,21 @@ export function Camera() {
           />
         )}
 
-        <div className="absolute bottom-2 left-1/2 -translate-1/2 flex items-center gap-3">
+        <div className="absolute bottom-2 left-1/2 flex items-center gap-3">
           {!photoDataUrl ? (
             <button
+              type="button"
               onClick={capturePhoto}
               className="flex items-center justify-center shadow w-14 h-14 rounded-full bg-white text-gray-900"
-              title="Ambil foto">
+              title="Take picture">
               <FiCamera className="w-6 h-6" />
             </button>
           ) : (
             <button
-              onClick={retake}
+              type="button"
+              onClick={capturePhoto}
               className="flex items-center justify-center shadow w-14 h-14 rounded-full bg-white text-gray-900"
-              title="Retake foto">
+              title="Retake picture">
               <FiRefreshCw className="w-6 h-6" />
             </button>
           )}
@@ -237,10 +240,10 @@ export function Camera() {
             </button>
           </form>
         </div>
-
         {errorMessage && <p className="text-red-500">{errorMessage}</p>}
         <canvas ref={canvasRef} className="hidden" />
       </div>
+
       <section ref={resultRef} className="w-full">
         <div className="bg-gray-800 p-6 mt-8 rounded-xl shadow border border-gray-700">
           <div className="flex items-center gap-2 mb-3 text-xl text-yellow-400">
@@ -248,29 +251,29 @@ export function Camera() {
           </div>
           {isTyping && !typedHtml && (
             <div className="flex items-center gap-1 text-sm text-gray-500">
-              <span className="w-2 h-2 rounded-full bg-gray-400 animate-pulse" />
-
-              <span className="w-2 h-2 rounded-full bg-gray-400 animate-pulse [animation-delay:.15s]" />
-
-              <span className="w-2 h-2 rounded-full bg-gray-400 animate-pulse [animation-delay:.3s]" />
+              <span className="w-2 h-2 rounded-full bg-gray-400 animate-pulse"></span>
+              <span className="w-2 h-2 rounded-full bg-gray-400 animate-pulse [animation-delay:.15s]"></span>
+              <span className="w-2 h-2 rounded-full bg-gray-400 animate-pulse [animation-delay:.3s]"></span>
             </div>
           )}
           {htmlToRender.trim() ? (
             <div
-              className="text-base leading-6
-                            [&_section]:mt-3
-                            [&_h2]:mt-3 [&_h2]:text-lg [&_h2]:font-bold
-                        "
-              dangerouslySetInnerHTML={{ __html: htmlToRender }}
+              className="text-base leading-6 
+            [&_section]:mt-3
+            [&_h2]:mt-3 [&_h2]:text-lg [&_h2]:font-bold"
+              dangerouslySetInnerHTML={{
+                __html: htmlToRender,
+              }}
             />
           ) : (
             <div className="bg-gray-500 p-4">
-              <p className="font-semibold text-white">
-                Ambil Foto Kamu Lalu Tekan Ramalkan! Agar Kamu tau Kondisi Kamu
-                Terkini
+              <p>
+                Take your picture then press ramal! For you can know your
+                condition
               </p>
             </div>
           )}
+          <div>content</div>
         </div>
       </section>
     </div>

@@ -1,5 +1,4 @@
-type Props = {};
-export default function Footer({}: Props) {
+export default function Footer() {
   return (
     <footer className="text-sm text-center italic">
       <p>

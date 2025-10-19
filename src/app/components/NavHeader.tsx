@@ -1,5 +1,4 @@
-type Props = {};
-export default function NavHeader({}: Props) {
+export default function NavHeader() {
   return (
     <header className="text-center pb-16">
       <h1
